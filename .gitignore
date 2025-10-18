@@ -1,0 +1,33 @@
+# Alembic migrations
+# Python cache files
+__pycache__/
+
+env/
+*.pyc
+
+# Environment variables
+.env
+
+# IDE settings
+.vscode/
+.idea/
+
+# Log files
+*.log
+
+# Local development settings
+instance/
+local_settings.py
+
+# Database files
+*.db
+*.sqlite3
+
+# Dependency directories
+node_modules/
+bower_components/
+
+# Distribution/build directories
+dist/
+build/
+*.egg-info/
