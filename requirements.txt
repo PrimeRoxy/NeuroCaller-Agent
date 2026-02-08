@@ -29,3 +29,5 @@ PyMuPDF
 psutil
 langchain_experimental
 PyPDF2
+pdf2image 
+reportlab

@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from router import rag_router,realtime_router
+from router import rag_router,realtime_router,config_org
 from call import plivo,call_stream
 from fastapi.middleware.cors import CORSMiddleware
 import logging
@@ -19,4 +19,4 @@ app.include_router(realtime_router.router, prefix="/api", tags=["Realtime Sales 
 app.include_router(rag_router.router, prefix="/api", tags=["Knowledge Injection"])
 app.include_router(plivo.router, tags=["Calling"])
 app.include_router(call_stream.router, tags=["streaming Call"])
-# app.include_router(org_data.router, tags=["ORG DATA"])
+app.include_router(config_org.router, tags=["ORG DATA"])

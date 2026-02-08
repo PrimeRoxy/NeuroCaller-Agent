@@ -6,7 +6,7 @@ env/
 *.pyc
 
 # Environment variables
-.env
+# .env
 
 # IDE settings
 .vscode/
