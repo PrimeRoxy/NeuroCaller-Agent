@@ -223,6 +223,9 @@ curl -X POST "http://localhost:8000/api/ask_neurocaller" \
 ### Dashboard
 ![Dashboard](demo/dashboard.png)
 
+### Interface
+![Chat Interface](demo/chat.png)
+
 <!-- ### Call in Progress
 ![Call Progress](docs/images/call-progress.png) -->
 
