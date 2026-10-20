@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>NeuroCaller</title>
+  <meta name="description" content="Configure your AI calling agent, chat with it, and see every call and lead in one place.">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <script>
+    try {
+      var saved = JSON.parse(localStorage.getItem('nc.theme'));
+      document.documentElement.dataset.theme = saved || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    } catch (e) { document.documentElement.dataset.theme = 'dark'; }
+  </script>
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/app.css">
+</head>
+<body>
+  <div id="root"><div class="boot"><span class="mark"></span></div></div>
+  <noscript><p style="padding:24px">NeuroCaller needs JavaScript to run.</p></noscript>
+  <script type="module" src="/assets/js/app.js"></script>
+</body>
+</html>

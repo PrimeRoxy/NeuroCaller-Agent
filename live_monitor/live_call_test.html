@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Live Call Socket — Test</title>
+<style>
+  :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+  body { margin: 0; padding: 24px; background: #0f1216; color: #e8eaed; }
+  h1 { font-size: 18px; margin: 0 0 16px; }
+  .bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 20px; }
+  input { background: #1b1f24; border: 1px solid #333; color: #e8eaed; padding: 8px 10px; border-radius: 6px; }
+  button { background: #2d7cf6; border: 0; color: #fff; padding: 8px 14px; border-radius: 6px; cursor: pointer; }
+  button.stop { background: #444; }
+  #status { font-size: 13px; opacity: .8; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .card { background: #1b1f24; border: 1px solid #2a2f36; border-radius: 10px; padding: 16px; }
+  .card.ongoing { border-color: #2d7cf6; box-shadow: 0 0 0 1px #2d7cf6 inset; }
+  .card .num { font-size: 15px; font-weight: 600; }
+  .card .row { font-size: 13px; opacity: .85; margin-top: 6px; }
+  .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; margin-top: 8px; }
+  .pill.live { background: #123d1d; color: #6ee787; }
+  .pill.done { background: #3d1d12; color: #ff9e64; }
+  pre#log { background: #12151a; border: 1px solid #2a2f36; border-radius: 8px; padding: 12px;
+            font-size: 12px; max-height: 220px; overflow: auto; margin-top: 20px; }
+</style>
+</head>
+<body>
+  <h1>Live Call Socket — Dashboard Test</h1>
+  <div class="bar">
+    <input id="base" size="24" value="ws://localhost:8000" />
+    <input id="org" placeholder="org_id" />
+    <input id="user" placeholder="user_id" />
+    <button id="connect">Connect</button>
+    <button id="disconnect" class="stop">Disconnect</button>
+    <span id="status">idle</span>
+  </div>
+
+  <div class="cards" id="cards"></div>
+  <pre id="log"></pre>
+
+<script>
+  // Frontend keeps at most two cards, keyed by call_uuid:
+  // the current ongoing call + the most recently completed one.
+  const MAX_CARDS = 2;
+  let ws = null;
+  const calls = new Map(); // call_uuid -> payload
+
+  const $ = (id) => document.getElementById(id);
+  const log = (m) => { const el = $("log"); el.textContent += m + "\n"; el.scrollTop = el.scrollHeight; };
+
+  function upsert(call) {
+    if (!call || !call.call_uuid) return;
+    calls.set(call.call_uuid, call);
+    // Trim to the two most recent by updated_at.
+    if (calls.size > MAX_CARDS) {
+      const sorted = [...calls.values()].sort(
+        (a, b) => new Date(b.updated_at) - new Date(a.updated_at)
+      );
+      calls.clear();
+      sorted.slice(0, MAX_CARDS).forEach((c) => calls.set(c.call_uuid, c));
+    }
+    render();
+  }
+
+  function render() {
+    const wrap = $("cards");
+    wrap.innerHTML = "";
+    [...calls.values()]
+      .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+      .forEach((c) => {
+        const live = c.live_analysis_enabled === true || c.hangup_cause === "ongoing";
+        const el = document.createElement("div");
+        el.className = "card" + (live ? " ongoing" : "");
+        el.innerHTML = `
+          <div class="num">${c.from_number || "?"} &rarr; ${c.to_number || "?"}</div>
+          <div class="row">uuid: ${c.call_uuid || "-"}</div>
+          <div class="row">status: ${c.lead_status || "-"}</div>
+          <div class="row">cause: ${c.hangup_cause || "-"}</div>
+          <div class="row">reason: ${c.lead_reason || "-"}</div>
+          <div class="row">updated: ${c.updated_at || "-"}</div>
+          <span class="pill ${live ? "live" : "done"}">${live ? "ONGOING" : "COMPLETED"}</span>
+        `;
+        wrap.appendChild(el);
+      });
+  }
+
+  $("connect").onclick = () => {
+    const url = `${$("base").value.replace(/\/$/, "")}/ws/live-calls`
+      + `?org_id=${encodeURIComponent($("org").value)}`
+      + `&user_id=${encodeURIComponent($("user").value)}`;
+    log("connecting " + url);
+    ws = new WebSocket(url);
+    ws.onopen = () => { $("status").textContent = "connected"; };
+    ws.onclose = () => { $("status").textContent = "disconnected"; };
+    ws.onerror = () => { $("status").textContent = "error"; };
+    ws.onmessage = (ev) => {
+      const f = JSON.parse(ev.data);
+      if (f.type === "snapshot") { calls.clear(); f.calls.forEach(upsert); log(`snapshot: ${f.calls.length} call(s)`); }
+      else if (f.type === "update") { upsert(f.call); log("update: " + f.call.hangup_cause); }
+      else if (f.type === "ping") { /* heartbeat */ }
+    };
+  };
+
+  $("disconnect").onclick = () => { if (ws) ws.close(); };
+</script>
+</body>
+</html>
