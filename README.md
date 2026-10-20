@@ -1,27 +1,32 @@
-# NeuroCaller
+# dev_allyra_adk_salescalling
+# 🧠 NeuroCaller Agent
 
-AI sales-calling agent built on Google ADK, with a web platform to configure the agent, chat with it, and watch every call.
+<div align="center">
 
-## Run
+![NeuroCaller Banner](https://img.shields.io/badge/NeuroCaller-AI%20Calling%20Agent-blueviolet?style=for-the-badge)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-blue?style=for-the-badge&logo=python)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.133%2B-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Google ADK](https://img.shields.io/badge/Google%20ADK-2.3-4285F4?style=for-the-badge&logo=google)](https://google.github.io/adk-docs/)
+[![Gemini Live](https://img.shields.io/badge/Gemini-Live%20API-8E75B2?style=for-the-badge&logo=googlegemini)](https://ai.google.dev/gemini-api/docs/live)
 
-```bash
-uvicorn main:app --reload --port 8000
-```
+**AI sales-calling agent: plan a campaign by chatting, let Gemini Live hold the calls, and watch every lead get scored, analysed, and followed up.**
 
-- `http://localhost:8000/` is the landing page.
-- `http://localhost:8000/app` is the platform. It asks for an organisation ID and user ID, or you can link straight in with `/app?org_id=…&user_id=…`.
-- `http://localhost:8000/docs` lists the API.
+[Overview](#-overview) • [Features](#-features) • [Architecture](#%EF%B8%8F-architecture) • [Installation](#-installation) • [Usage](#-usage) • [API](#-api-reference)
 
-## Frontend
+</div>
 
-The frontend is plain HTML, CSS, and JavaScript modules in `utils/` (`index.html`, `app.html`, and `assets/`), served by FastAPI. There is no build step. Only `utils/assets` is exposed as static files, so the Python modules in `utils/` stay private.
+---
 
-| Screen | Data source |
-| --- | --- |
-| Command center | `/api/dashboard/stats/summary`, `/calls/by-user-org`, `/api/dashboard/campaigns`, `/ws/live-calls` |
-| Live monitor | `/ws/live-calls`, `/quick-call`, `/voices` |
-| Campaigns | `/api/dashboard/campaign/{id}` and its `/progress`, `/calls`, `/events`, `/pause`, `/resume`, `/cancel`; `/api/scheduler/tasks` |
-| Agent studio | `/api/allyroid/config`, `/voices`, `/rented-numbers`, `/api/salesforce/check` |
-| Copilot | `/salesmate` |
-| Calls, Leads, Analytics | `/calls/by-user-org`, `/api/dashboard/stats/summary` |
-| Settings | `/health` |
+## 🌟 Overview
+
+**NeuroCaller** is an outbound sales-calling platform built on [Google ADK](https://google.github.io/adk-docs/). You describe a campaign to the NeuroCaller agent in chat (script, product details, FAQs, and leads as text, a file, or Salesforce). The agent validates the numbers, builds a call prompt, and starts dialling. Every call is a real-time voice conversation run by the **Gemini Live API** over **Plivo** or **VoiceLink** telephony.
+
+While a call is live, the caller is scored HOT / WARM / COLD and the result is streamed to the dashboard. After hangup, the recording is stored and analysed. Callbacks are scheduled, meetings booked, and the lead is synced to Salesforce.
+
+The FastAPI backend also serves a web platform (no build step) with a command center, live monitor, campaign controls, agent studio, and a chat copilot.
+
+### ⚡ Key Highlights
+
+- 🤖 **Conversational campaign setup**: a Google ADK agent (`gemini-2.5-flash`) collects inputs, validates leads, generates the prompt, and launches the campaign from chat
+- 🎙️ **Real-time voice with Gemini Live**: `gemini-3.1-flash-live-preview` holds the calls, with barge-in, a greeting gate, silence nudges, and model-initiated hangup
+- 📞 **Two telephony providers**: Plivo (μ-law) worldwide and VoiceLink (A-law) for Indian numbers, picked automatically from the caller ID
